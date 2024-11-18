@@ -1,0 +1,310 @@
+Z0044L9@THHM4G4PNY Documents % psql postgres
+psql (15.8 (Homebrew))
+Type "help" for help.
+
+postgres=# alter role postgres WITH SUPERUSER;
+ALTER ROLE
+postgres=# 
+
+#####CHECK PRIVS#######
+Z0044L9@THHM4G4PNY Documents % psql -U postgres -d postgres
+
+postgres=# \du postgres
+           List of roles
+ Role name | Attributes | Member of 
+-----------+------------+-----------
+ postgres  | Superuser  | {}
+
+postgres=# 
+
+######CREATE DB#####
+ Role name | Attributes | Member of 
+-----------+------------+-----------
+ postgres  | Superuser  | {}
+
+postgres=# 
+postgres=# CREATE DATABASE book_exchange;
+CREATE DATABASE
+postgres=# 
+
+book_exchange=# \dt
+               List of relations
+ Schema |        Name        | Type  |  Owner   
+--------+--------------------+-------+----------
+ public | books              | table | postgres
+ public | exchange_requests  | table | postgres
+ public | exchanges          | table | postgres
+ public | otp_tokens         | table | postgres
+ public | password_resets    | table | postgres
+ public | user_activity_logs | table | postgres
+ public | users              | table | postgres
+ public | users_bookexchange | table | postgres
+(8 rows)
+
+book_exchange=# select * from exchange_requests;
+ id | sender_id | receiver_id | book_id | status | request_date 
+----+-----------+-------------+---------+--------+--------------
+(0 rows)
+
+book_exchange=# select * from users_bookexchange
+book_exchange-# ;
+ id | username |           email           | password_hash |         created_at         |                           password                           | role |         updated_at         | otp | otp_expiry 
+----+----------+---------------------------+---------------+----------------------------+--------------------------------------------------------------+------+----------------------------+-----+------------
+  4 | vasudeva | vasudeva@example.com      |               | 2024-11-09 08:50:42.115608 | $2b$10$/X0LzAUw5WBvA0iT.QtS1unb2w5DrPC.3P10RCdvSCN4q/eZQdAx2 | user | 2024-11-09 11:23:34.621547 |     |           
+  5 | Revathi  | revathi@example.com       |               | 2024-11-09 09:33:16.231987 | $2b$10$mV8nmj1dHDfAo8zEK.0Rce/FSFokaC67LpTQAdrNoP0IiOT1XIope | user | 2024-11-09 11:23:34.621547 |     |           
+  6 | vidhyav  | vidhya.vasudeva@gmail.com |               | 2024-11-09 11:32:25.903618 | $2b$10$pWRciEutbrgn89JL0MAHKOPbxtZdasT0cYVb4sRU3i2z1.VJNXeQ6 | user | 2024-11-09 11:32:25.903618 |     |           
+  1 | vidhya   | vidhya@example.com        |               | 2024-11-09 08:26:02.851922 | $2b$10$1cjCespeoB2Iok/6sXUUrueDG3B0VEZZaZhpNWBA.OnZr06nn.UU2 | user | 2024-11-09 11:23:34.621547 |     |           
+(4 rows)
+
+book_exchange=# 
+  [Restored 10 Nov 2024 at 11:42:51 AM]
+Last login: Sun Nov 10 11:42:51 on ttys001
+Restored session: Sun Nov 10 11:38:55 IST 2024
+Z0044L9@THHM4G4PNY Downloads %  psql -U postgres -d book_exchange
+psql (15.8 (Homebrew))
+Type "help" for help.
+
+book_exchange=# \d users_bookexchange
+                                          Table "public.users_bookexchange"
+    Column     |            Type             | Collation | Nullable |                    Default                     
+---------------+-----------------------------+-----------+----------+------------------------------------------------
+ id            | integer                     |           | not null | nextval('users_bookexchange_id_seq'::regclass)
+ username      | character varying(50)       |           |          | 
+ email         | character varying(100)      |           |          | 
+ password_hash | character varying(100)      |           |          | 
+ created_at    | timestamp without time zone |           |          | CURRENT_TIMESTAMP
+ password      | character varying(255)      |           |          | 
+ role          | character varying(50)       |           |          | 'user'::character varying
+ updated_at    | timestamp without time zone |           |          | CURRENT_TIMESTAMP
+ otp           | character varying(6)        |           |          | 
+ otp_expiry    | bigint                      |           |          | 
+Indexes:
+    "users_bookexchange_pkey" PRIMARY KEY, btree (id)
+    "users_bookexchange_email_key" UNIQUE CONSTRAINT, btree (email)
+Referenced by:
+    TABLE "user_activity_logs" CONSTRAINT "user_activity_logs_user_id_fkey" FOREIGN KEY (user_id) REFERENCES users_bookexchange(id)
+
+book_exchange=# ALTER TABLE users_bookexchange
+ADD COLUMN phone_number VARCHAR(15);  -- Adjust the column type and size as needed
+ALTER TABLE
+book_exchange=# select * from users_bookexchange;
+ id | username |           email           | password_hash |         created_at         |                           password                           | role |         updated_at         | otp | otp_expiry | phone_number 
+----+----------+---------------------------+---------------+----------------------------+--------------------------------------------------------------+------+----------------------------+-----+------------+--------------
+  4 | vasudeva | vasudeva@example.com      |               | 2024-11-09 08:50:42.115608 | $2b$10$/X0LzAUw5WBvA0iT.QtS1unb2w5DrPC.3P10RCdvSCN4q/eZQdAx2 | user | 2024-11-09 11:23:34.621547 |     |            | 
+  5 | Revathi  | revathi@example.com       |               | 2024-11-09 09:33:16.231987 | $2b$10$mV8nmj1dHDfAo8zEK.0Rce/FSFokaC67LpTQAdrNoP0IiOT1XIope | user | 2024-11-09 11:23:34.621547 |     |            | 
+  6 | vidhyav  | vidhya.vasudeva@gmail.com |               | 2024-11-09 11:32:25.903618 | $2b$10$pWRciEutbrgn89JL0MAHKOPbxtZdasT0cYVb4sRU3i2z1.VJNXeQ6 | user | 2024-11-09 11:32:25.903618 |     |            | 
+  1 | vidhya   | vidhya@example.com        |               | 2024-11-09 08:26:02.851922 | $2b$10$1cjCespeoB2Iok/6sXUUrueDG3B0VEZZaZhpNWBA.OnZr06nn.UU2 | user | 2024-11-09 11:23:34.621547 |     |            | 
+(4 rows)
+
+book_exchange=# UPDATE users_bookexchange
+SET phone_number = '+919108747945'  -- Replace with the actual phone number
+WHERE email = 'vidhya@example.com';
+UPDATE 1
+book_exchange=# select * from users_bookexchange;
+ id | username |           email           | password_hash |         created_at         |                           password                           | role |         updated_at         | otp | otp_expiry | phone_number  
+----+----------+---------------------------+---------------+----------------------------+--------------------------------------------------------------+------+----------------------------+-----+------------+---------------
+  4 | vasudeva | vasudeva@example.com      |               | 2024-11-09 08:50:42.115608 | $2b$10$/X0LzAUw5WBvA0iT.QtS1unb2w5DrPC.3P10RCdvSCN4q/eZQdAx2 | user | 2024-11-09 11:23:34.621547 |     |            | 
+  5 | Revathi  | revathi@example.com       |               | 2024-11-09 09:33:16.231987 | $2b$10$mV8nmj1dHDfAo8zEK.0Rce/FSFokaC67LpTQAdrNoP0IiOT1XIope | user | 2024-11-09 11:23:34.621547 |     |            | 
+  6 | vidhyav  | vidhya.vasudeva@gmail.com |               | 2024-11-09 11:32:25.903618 | $2b$10$pWRciEutbrgn89JL0MAHKOPbxtZdasT0cYVb4sRU3i2z1.VJNXeQ6 | user | 2024-11-09 11:32:25.903618 |     |            | 
+  1 | vidhya   | vidhya@example.com        |               | 2024-11-09 08:26:02.851922 | $2b$10$1cjCespeoB2Iok/6sXUUrueDG3B0VEZZaZhpNWBA.OnZr06nn.UU2 | user | 2024-11-09 11:23:34.621547 |     |            | +919108747945
+(4 rows)
+
+book_exchange=# 
+  [Restored 10 Nov 2024 at 1:37:34 PM]
+Last login: Sun Nov 10 13:37:34 on ttys000
+Restored session: Sun Nov 10 13:34:20 IST 2024
+Z0044L9@THHM4G4PNY Downloads % 
+  [Restored 10 Nov 2024 at 3:38:17 PM]
+Last login: Sun Nov 10 15:38:12 on console
+Restored session: Sun Nov 10 14:38:01 IST 2024
+Z0044L9@THHM4G4PNY Downloads % 
+Z0044L9@THHM4G4PNY Downloads % pwd
+  [Restored 10 Nov 2024 at 4:15:07 PM]
+Last login: Sun Nov 10 15:38:17 on ttys001
+Z0044L9@THHM4G4PNY Downloads % 
+Z0044L9@THHM4G4PNY Downloads % 
+  [Restored 10 Nov 2024 at 4:44:33 PM]
+Last login: Sun Nov 10 16:44:28 on console
+Restored session: Sun Nov 10 16:42:51 IST 2024
+Z0044L9@THHM4G4PNY Downloads % 
+  [Restored 10 Nov 2024 at 5:01:53 PM]
+Last login: Sun Nov 10 17:01:54 on ttys000
+Restored session: Sun Nov 10 17:00:41 IST 2024
+Z0044L9@THHM4G4PNY Downloads %  psql -U postgres -d book_exchange
+psql (15.8 (Homebrew))
+Type "help" for help.
+
+book_exchange=# \dt
+               List of relations
+ Schema |        Name        | Type  |  Owner   
+--------+--------------------+-------+----------
+ public | books              | table | postgres
+ public | exchange_requests  | table | postgres
+ public | exchanges          | table | postgres
+ public | otp_tokens         | table | postgres
+ public | password_resets    | table | postgres
+ public | user_activity_logs | table | postgres
+ public | users              | table | postgres
+ public | users_bookexchange | table | postgres
+(8 rows)
+
+book_exchange=# select * from exchange_requests;
+ id | sender_id | receiver_id | book_id | status | request_date 
+----+-----------+-------------+---------+--------+--------------
+(0 rows)
+
+book_exchange=# select * from books;
+ id | user_id |      title       |       author        |                genre                 |  location   | availability |         created_at         
+----+---------+------------------+---------------------+--------------------------------------+-------------+--------------+----------------------------
+  2 |       1 | Manimekalai      | Sithalai Sathanar   | Tamil Epic Literature                | Madurai     | t            | 2024-11-08 22:40:23.488797
+  3 |       1 | Thirukkural      | Thiruvalluvar       | Ethical Literature                   | Kanchipuram | t            | 2024-11-08 22:40:29.954617
+  4 |       1 | Purananuru       | Various             | Anthology of Tamil Poetic Literature | Tirunelveli | t            | 2024-11-08 22:40:35.467972
+  5 |       1 | Kamba Ramayanam  | Kambar              | Tamil Epic Literature                | Tanjore     | t            | 2024-11-08 22:40:40.940626
+  6 |       1 | Periya Puranam   | Sekkizhar           | Hagiography                          | Chidambaram | t            | 2024-11-08 22:40:47.313264
+  7 |       1 | Agathiyar 1080   | Agathiyar           | Tamil Siddha Literature              | Thanjavur   | t            | 2024-11-08 22:40:53.524781
+  8 |       1 | Tolkappiyam      | Tolkappiyar         | Tamil Grammar and Linguistics        | Madurai     | t            | 2024-11-08 22:40:58.413845
+  9 |       1 | Ainkurunuru      | Various             | Anthology of Tamil Poetic Literature | Cuddalore   | t            | 2024-11-08 22:41:04.420044
+ 10 |       1 | Pattupattu       | Various             | Tamil Anthology of Poems             | Kanchipuram | t            | 2024-11-08 22:41:10.118938
+ 14 |       1 | London Dreams    | Vasudeva            | Love                                 | Bangalore   | t            | 2024-11-09 08:44:45.668876
+ 16 |       4 | My Love          | Vidhya              | Love                                 | Mettur      | t            | 2024-11-09 08:56:53.828456
+ 17 |       7 | London Dream2    | Vasudeva            | Love                                 | London      | t            | 2024-11-10 16:51:51.292075
+ 18 |       7 | Me Before You    | Jojo Moyes          | Love                                 | London      | t            | 2024-11-10 16:53:05.797752
+ 19 |       7 | Romeo and Juliet | William Shakespeare | Love                                 | Mettur      | t            | 2024-11-10 16:53:26.538086
+  1 |       1 | Silappatikaram   | Ilango Adigal       | Tamil Epic Literature                | Mettur      | t            | 2024-11-08 22:40:15.849484
+(15 rows)
+
+book_exchange=# \d exchange_requests
+                                         Table "public.exchange_requests"
+    Column    |            Type             | Collation | Nullable |                    Default                    
+--------------+-----------------------------+-----------+----------+-----------------------------------------------
+ id           | integer                     |           | not null | nextval('exchange_requests_id_seq'::regclass)
+ sender_id    | integer                     |           |          | 
+ receiver_id  | integer                     |           |          | 
+ book_id      | integer                     |           |          | 
+ status       | character varying(50)       |           |          | 'pending'::character varying
+ request_date | timestamp without time zone |           |          | CURRENT_TIMESTAMP
+Indexes:
+    "exchange_requests_pkey" PRIMARY KEY, btree (id)
+Foreign-key constraints:
+    "exchange_requests_book_id_fkey" FOREIGN KEY (book_id) REFERENCES books(id) ON DELETE CASCADE
+    "exchange_requests_receiver_id_fkey" FOREIGN KEY (receiver_id) REFERENCES users(id) ON DELETE CASCADE
+    "exchange_requests_sender_id_fkey" FOREIGN KEY (sender_id) REFERENCES users(id) ON DELETE CASCADE
+
+book_exchange=# -- Modify the exchange_requests table to add new fields
+ALTER TABLE exchange_requests
+ADD COLUMN delivery_method VARCHAR(255),
+ADD COLUMN exchange_duration VARCHAR(255);
+ALTER TABLE
+book_exchange=# -- Modify the status column to allow for a wider set of statuses
+ALTER TABLE exchange_requests
+    ALTER COLUMN status SET DEFAULT 'pending';
+ALTER TABLE
+book_exchange=# -- Add constraint for valid statuses (optional)
+ALTER TABLE exchange_requests
+ADD CONSTRAINT valid_status CHECK (status IN ('pending', 'accepted', 'rejected', 'completed'));
+ALTER TABLE
+book_exchange=# -- Ensure foreign keys for sender, receiver, and book are set up properly
+ALTER TABLE exchange_requests
+    ADD CONSTRAINT exchange_requests_sender_id_fkey
+    FOREIGN KEY (sender_id) REFERENCES users(id) ON DELETE CASCADE;
+
+ALTER TABLE exchange_requests
+    ADD CONSTRAINT exchange_requests_receiver_id_fkey
+    FOREIGN KEY (receiver_id) REFERENCES users(id) ON DELETE CASCADE;
+
+ALTER TABLE exchange_requests
+    ADD CONSTRAINT exchange_requests_book_id_fkey
+    FOREIGN KEY (book_id) REFERENCES books(id) ON DELETE CASCADE;
+ERROR:  constraint "exchange_requests_sender_id_fkey" for relation "exchange_requests" already exists
+ERROR:  constraint "exchange_requests_receiver_id_fkey" for relation "exchange_requests" already exists
+ERROR:  constraint "exchange_requests_book_id_fkey" for relation "exchange_requests" already exists
+book_exchange=# pwd
+book_exchange-# \dt
+               List of relations
+ Schema |        Name        | Type  |  Owner   
+--------+--------------------+-------+----------
+ public | books              | table | postgres
+ public | exchange_requests  | table | postgres
+ public | exchanges          | table | postgres
+ public | otp_tokens         | table | postgres
+ public | password_resets    | table | postgres
+ public | user_activity_logs | table | postgres
+ public | users              | table | postgres
+ public | users_bookexchange | table | postgres
+(8 rows)
+
+book_exchange-# select * from books;
+ERROR:  syntax error at or near "pwd"
+LINE 1: pwd
+        ^
+book_exchange=# select * from books;
+ id | user_id |      title       |       author        |                genre                 |  location   | availability |         created_at         
+----+---------+------------------+---------------------+--------------------------------------+-------------+--------------+----------------------------
+  2 |       1 | Manimekalai      | Sithalai Sathanar   | Tamil Epic Literature                | Madurai     | t            | 2024-11-08 22:40:23.488797
+  3 |       1 | Thirukkural      | Thiruvalluvar       | Ethical Literature                   | Kanchipuram | t            | 2024-11-08 22:40:29.954617
+  4 |       1 | Purananuru       | Various             | Anthology of Tamil Poetic Literature | Tirunelveli | t            | 2024-11-08 22:40:35.467972
+  5 |       1 | Kamba Ramayanam  | Kambar              | Tamil Epic Literature                | Tanjore     | t            | 2024-11-08 22:40:40.940626
+  6 |       1 | Periya Puranam   | Sekkizhar           | Hagiography                          | Chidambaram | t            | 2024-11-08 22:40:47.313264
+  7 |       1 | Agathiyar 1080   | Agathiyar           | Tamil Siddha Literature              | Thanjavur   | t            | 2024-11-08 22:40:53.524781
+  8 |       1 | Tolkappiyam      | Tolkappiyar         | Tamil Grammar and Linguistics        | Madurai     | t            | 2024-11-08 22:40:58.413845
+  9 |       1 | Ainkurunuru      | Various             | Anthology of Tamil Poetic Literature | Cuddalore   | t            | 2024-11-08 22:41:04.420044
+ 10 |       1 | Pattupattu       | Various             | Tamil Anthology of Poems             | Kanchipuram | t            | 2024-11-08 22:41:10.118938
+ 14 |       1 | London Dreams    | Vasudeva            | Love                                 | Bangalore   | t            | 2024-11-09 08:44:45.668876
+ 16 |       4 | My Love          | Vidhya              | Love                                 | Mettur      | t            | 2024-11-09 08:56:53.828456
+ 17 |       7 | London Dream2    | Vasudeva            | Love                                 | London      | t            | 2024-11-10 16:51:51.292075
+ 18 |       7 | Me Before You    | Jojo Moyes          | Love                                 | London      | t            | 2024-11-10 16:53:05.797752
+ 19 |       7 | Romeo and Juliet | William Shakespeare | Love                                 | Mettur      | t            | 2024-11-10 16:53:26.538086
+  1 |       1 | Silappatikaram   | Ilango Adigal       | Tamil Epic Literature                | Mettur      | t            | 2024-11-08 22:40:15.849484
+(15 rows)
+
+book_exchange=# select * from exchange_requests
+book_exchange-# ;
+ id | sender_id | receiver_id | book_id | status | request_date | delivery_method | exchange_duration 
+----+-----------+-------------+---------+--------+--------------+-----------------+-------------------
+(0 rows)
+
+book_exchange=# select * from exchanges;
+ id | book_id | user_id | status | created_at | updated_at | requested_by | accepted_by | exchange_date 
+----+---------+---------+--------+------------+------------+--------------+-------------+---------------
+(0 rows)
+
+book_exchange=# select * from otp_tokens;
+ id | phone_number | otp_code | created_at | expires_at | is_verified | attempts 
+----+--------------+----------+------------+------------+-------------+----------
+(0 rows)
+
+book_exchange=# select * from password_resets;
+ id | reset_token | created_at | expires_at | user_id | ip_address 
+----+-------------+------------+------------+---------+------------
+(0 rows)
+
+book_exchange=# select * from user_activity_logs;
+ id | user_id | action | details | created_at 
+----+---------+--------+---------+------------
+(0 rows)
+
+book_exchange=# select * from users;
+ id | username |       email        | password_hash | reset_token | reset_token_expiry |         created_at         |         updated_at         |           reset_password_token           | reset_password_expires  | phonenumber | phone_number | otp 
+----+----------+--------------------+---------------+-------------+--------------------+----------------------------+----------------------------+------------------------------------------+-------------------------+-------------+--------------+-----
+  1 | vidhya   | vidhya@example.com | Goodluck#27   |             |                    | 2024-11-08 22:31:49.480403 | 2024-11-08 22:31:49.480403 | c0592fc7e48fcc94389126c3c16c4779c4ba6462 | 2024-11-09 21:38:13.134 |             | 919108747945 | 
+(1 row)
+
+book_exchange=# select * from users_bookexchange;
+ id |  username  |           email           | password_hash |         created_at         |                           password                           | role |         updated_at         | otp | otp_expiry | phone_number  
+----+------------+---------------------------+---------------+----------------------------+--------------------------------------------------------------+------+----------------------------+-----+------------+---------------
+  4 | vasudeva   | vasudeva@example.com      |               | 2024-11-09 08:50:42.115608 | $2b$10$/X0LzAUw5WBvA0iT.QtS1unb2w5DrPC.3P10RCdvSCN4q/eZQdAx2 | user | 2024-11-09 11:23:34.621547 |     |            | 
+  5 | Revathi    | revathi@example.com       |               | 2024-11-09 09:33:16.231987 | $2b$10$mV8nmj1dHDfAo8zEK.0Rce/FSFokaC67LpTQAdrNoP0IiOT1XIope | user | 2024-11-09 11:23:34.621547 |     |            | 
+  6 | vidhyav    | vidhya.vasudeva@gmail.com |               | 2024-11-09 11:32:25.903618 | $2b$10$pWRciEutbrgn89JL0MAHKOPbxtZdasT0cYVb4sRU3i2z1.VJNXeQ6 | user | 2024-11-09 11:32:25.903618 |     |            | 
+  7 | vidhyavasu | vidhyavasu@example.com    |               | 2024-11-10 16:48:26.352505 | $2b$10$apknDLscXS.QNYxZUwYUBe1.YQfLgKZkYo0i.JkkNOtVzN1XcOaFK | user | 2024-11-10 16:48:26.352505 |     |            | 
+  1 | vidhya     | vidhya@example.com        |               | 2024-11-09 08:26:02.851922 | $2b$10$Uu99.h3BZ.Lc24wPLoTesuv4e3l0BU7dim.TOopfVj82zL72bmgSi | user | 2024-11-09 11:23:34.621547 |     |            | +919108747945
+(5 rows)
+
+book_exchange=# 
+book_exchange=# 
+book_exchange=# SELECT * FROM books WHERE user_id = 7;
+ id | user_id |      title       |       author        | genre | location | availability |         created_at         
+----+---------+------------------+---------------------+-------+----------+--------------+----------------------------
+ 17 |       7 | London Dream2    | Vasudeva            | Love  | London   | t            | 2024-11-10 16:51:51.292075
+ 18 |       7 | Me Before You    | Jojo Moyes          | Love  | London   | t            | 2024-11-10 16:53:05.797752
+ 19 |       7 | Romeo and Juliet | William Shakespeare | Love  | Mettur   | t            | 2024-11-10 16:53:26.538086
+(3 rows)
